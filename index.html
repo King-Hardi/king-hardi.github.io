@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Current Age Timer</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --text: #f5f7fa;
+      --muted: #8b93a1;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", Arial, Helvetica, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .wrap {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    .label {
+      margin: 0 0 10px 0;
+      font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+      font-weight: 500;
+      color: var(--muted);
+      text-align: left;
+      line-height: 1;
+    }
+
+    .timer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 16px;
+      align-items: baseline;
+      font-variant-numeric: tabular-nums;
+      text-align: left;
+      line-height: 1.15;
+      font-size: clamp(1.1rem, 2.2vw, 1.5rem);
+      font-family: "Inter", Arial, Helvetica, sans-serif;
+    }
+
+    .segment {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .value {
+      font-size: 1.18em;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .unit {
+      font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+      font-weight: 500;
+      color: var(--muted);
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <p class="label">Current age:</p>
+    <div id="timer" class="timer"></div>
+  </main>
+
+  <script>
+    const startDate = new Date("2007-07-24T00:00:00+08:00");
+    const timerElement = document.getElementById("timer");
+
+    function pad(value, length) {
+      return String(value).padStart(length, "0");
+    }
+
+    function getElapsedParts(fromDate, toDate) {
+      let years = toDate.getFullYear() - fromDate.getFullYear();
+
+      let yearAnchor = new Date(
+        fromDate.getFullYear() + years,
+        fromDate.getMonth(),
+        fromDate.getDate(),
+        fromDate.getHours(),
+        fromDate.getMinutes(),
+        fromDate.getSeconds(),
+        fromDate.getMilliseconds()
+      );
+
+      if (yearAnchor > toDate) {
+        years--;
+        yearAnchor = new Date(
+          fromDate.getFullYear() + years,
+          fromDate.getMonth(),
+          fromDate.getDate(),
+          fromDate.getHours(),
+          fromDate.getMinutes(),
+          fromDate.getSeconds(),
+          fromDate.getMilliseconds()
+        );
+      }
+
+      let months =
+        (toDate.getFullYear() - yearAnchor.getFullYear()) * 12 +
+        (toDate.getMonth() - yearAnchor.getMonth());
+
+      let monthAnchor = new Date(
+        yearAnchor.getFullYear(),
+        yearAnchor.getMonth() + months,
+        yearAnchor.getDate(),
+        yearAnchor.getHours(),
+        yearAnchor.getMinutes(),
+        yearAnchor.getSeconds(),
+        yearAnchor.getMilliseconds()
+      );
+
+      if (monthAnchor > toDate) {
+        months--;
+        monthAnchor = new Date(
+          yearAnchor.getFullYear(),
+          yearAnchor.getMonth() + months,
+          yearAnchor.getDate(),
+          yearAnchor.getHours(),
+          yearAnchor.getMinutes(),
+          yearAnchor.getSeconds(),
+          yearAnchor.getMilliseconds()
+        );
+      }
+
+      let remaining = toDate - monthAnchor;
+
+      const dayMs = 24 * 60 * 60 * 1000;
+      const hourMs = 60 * 60 * 1000;
+      const minuteMs = 60 * 1000;
+      const secondMs = 1000;
+
+      const days = Math.floor(remaining / dayMs);
+      remaining -= days * dayMs;
+
+      const hours = Math.floor(remaining / hourMs);
+      remaining -= hours * hourMs;
+
+      const minutes = Math.floor(remaining / minuteMs);
+      remaining -= minutes * minuteMs;
+
+      const seconds = Math.floor(remaining / secondMs);
+      remaining -= seconds * secondMs;
+
+      const milliseconds = remaining;
+
+      return { years, months, days, hours, minutes, seconds, milliseconds };
+    }
+
+    function segment(value, unit, digits) {
+      return `
+        <span class="segment">
+          <span class="value">${pad(value, digits)}</span>
+          <span class="unit">${unit}</span>
+        </span>
+      `;
+    }
+
+    function updateTimer() {
+      const now = new Date();
+      const elapsed = getElapsedParts(startDate, now);
+
+      timerElement.innerHTML =
+        segment(elapsed.years, "years", 2) +
+        segment(elapsed.months, "months", 2) +
+        segment(elapsed.days, "days", 2) +
+        segment(elapsed.hours, "hours", 2) +
+        segment(elapsed.minutes, "minutes", 2) +
+        segment(elapsed.seconds, "seconds", 2) +
+        segment(elapsed.milliseconds, "milliseconds", 3);
+    }
+
+    updateTimer();
+    setInterval(updateTimer, 16);
+  </script>
+</body>
+</html>
